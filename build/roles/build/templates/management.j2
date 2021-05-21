@@ -1,0 +1,15 @@
+!
+hostname {{ inventory_hostname }}
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+aaa authorization exec default local
+!
+username {{ management.username }} privilege 15 secret sha512 {{ management.password }}
+!
+management api http-commands
+   no shutdown
+!
+

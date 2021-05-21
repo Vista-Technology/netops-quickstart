@@ -1,0 +1,22 @@
+---
+- hosts: lab
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Destroy Arista topology
+      shell: docker-topo --destroy topology.yaml
+      args:
+        chdir:  ./topology
+      delegate_to: localhost
+      run_once: True
+
+    - name: Destroy the stack
+      shell: docker-compose down
+      delegate_to: localhost
+      run_once: True
+
+    - name: Prune docker stack
+      shell: docker system prune -a -f && docker volume prune -f
+      delegate_to: localhost
+      run_once: True

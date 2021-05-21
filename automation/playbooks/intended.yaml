@@ -1,0 +1,11 @@
+---
+- name: Apply intended configuration and set monitoring
+  hosts: lab
+  connection: network_cli
+  become: yes
+  become_method: enable
+  gather_facts: false
+
+  roles:
+    - deploy
+    - monitoring

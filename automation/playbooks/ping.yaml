@@ -1,0 +1,14 @@
+---
+- name: Test reachability from Hosts
+  hosts: testing
+  gather_facts: false
+
+  tasks:
+    - name: Ping destination
+      shell: "ping -c 1 -w 2 {{ ip_to_ping }} "
+      register: output
+
+    - name: Print result
+      debug:
+        msg: "{{output.stdout_lines}}"
+

@@ -1,0 +1,32 @@
+stages:
+  - validate
+  - deploy
+  - test
+
+batfish-validation:
+  stage: validate
+  script:
+    - chmod 755 automation
+    - cp configs/*.yml automation/host_vars/
+    - cd automation
+    - ansible-galaxy install -r requirements.yml
+    - ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3' playbooks/validate.yaml
+
+deploy-configurations:
+  stage: deploy
+  script:
+    - chmod 755 automation
+    - cp configs/*.yml automation/host_vars/
+    - cd automation
+    - ansible-galaxy install -r requirements.yml
+    - ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3' playbooks/intended.yaml
+
+ping-test:
+  stage: test
+  script:
+    - chmod 755 automation
+    - cp configs/*.yml automation/host_vars/
+    - cd automation
+    - chmod 400 demo.key
+    - ansible-galaxy install -r requirements.yml
+    - ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3' playbooks/ping.yaml

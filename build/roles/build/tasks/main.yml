@@ -1,0 +1,71 @@
+- name: Generate SSH key pair for Hosts in topology
+  shell: |
+    ssh-keygen -t rsa -N "" -f ./topology/alpine-host/demo.key
+    cp ./topology/alpine-host/demo.key ../automation/
+  delegate_to: localhost
+  run_once: True
+
+- name: Build Host docker image
+  shell: |
+    ./build.sh
+  args:
+    chdir:  ./topology/alpine-host
+  delegate_to: localhost
+  run_once: True
+
+- name: Import & Build cEOS image
+  shell: |
+    docker import cEOS-Lab.tar.xz ceos:latest
+  args:
+    chdir:  ./topology
+  delegate_to: localhost
+  run_once: True
+
+- name: Generate Arista configuration from templates
+  template:
+    src: full.j2
+    dest: "{{ buildpath }}"
+
+- name: Start Arista topology
+  shell: docker-topo --create topology.yaml
+  args:
+    chdir:  ./topology
+  delegate_to: localhost
+  run_once: True
+
+- name: Pause for 30 seconds to topology creation
+  pause:
+    seconds: 30
+  delegate_to: localhost
+  run_once: True
+
+- name: Copy OCPrometheus binary and configuration
+  shell:  |
+    docker cp roles/build/files/ocprometheus lab_{{inventory_hostname}}:/mnt/flash/
+    docker cp roles/build/files/ocprometheus.yml lab_{{inventory_hostname}}:/mnt/flash/
+
+- name: Pause for 90 seconds to topology up & running
+  pause:
+    seconds: 90
+  delegate_to: localhost
+  run_once: True
+
+- name: Start all stack architecture
+  shell: |
+    docker-compose up -d
+  delegate_to: localhost
+  run_once: True
+
+- name: Pause for 5 minutes, waiting for the stack comes up
+  pause:
+    seconds: 300
+  delegate_to: localhost
+  run_once: True
+
+- name: Register Gitlab Runner
+  shell: |
+    ./register-runner.sh
+  args:
+    chdir:  ./gitlab
+  delegate_to: localhost
+  run_once: True

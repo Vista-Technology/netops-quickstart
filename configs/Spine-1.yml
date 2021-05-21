@@ -1,0 +1,13 @@
+interfaces:
+  - name: Ethernet1
+    ipv4: 10.0.254.0/31
+  - name: Ethernet2
+    ipv4: 10.0.254.2/31
+routerid: 1.1.1.100/32
+bgp:
+  asn: 65100
+  neighbours:
+    - ipv4: 10.0.254.1
+      remote_asn: 65001
+    - ipv4: 10.0.254.3
+      remote_asn: 65002

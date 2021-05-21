@@ -1,0 +1,10 @@
+---
+- hosts: lab
+  connection: local
+  gather_facts: no
+
+  roles:
+    - build
+
+  vars:
+    buildpath: "./topology/configs/lab_{{ inventory_hostname }}"

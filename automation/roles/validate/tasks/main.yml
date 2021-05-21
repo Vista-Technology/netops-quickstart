@@ -1,0 +1,49 @@
+- name: Generate intended config to test
+  template:
+    src: config.j2
+    dest: "validation/workshop/configs/{{inventory_hostname}}"
+
+- name: Setup connection to Batfish service
+  bf_session:
+    host: batfish
+    name: local_batfish
+  delegate_to: localhost
+  run_once: true
+
+- name: Initialize the example network
+  bf_init_snapshot:
+    network: workshop
+    snapshot: workshop
+    snapshot_data: ../validation/workshop
+    overwrite: true
+  run_once: true
+  delegate_to: localhost
+
+- name: Retrieve Batfish Facts
+  bf_extract_facts:
+    output_directory: ../validation/workshop/data/bf_facts
+  register: bf_facts
+  run_once: true
+  delegate_to: localhost
+
+- name: Display neighbourships for all nodes
+  debug:
+    msg: " {{item.value.BGP.Neighbors}} "
+  with_dict: "{{bf_facts.result.nodes}}"
+  loop_control:
+    label: "{{item.key}}.BGP.Neighbors"
+  run_once: true
+  delegate_to: localhost
+
+- name: Validate the configuration of network devices
+  bf_assert:
+    assertions:
+      - type: assert_no_undefined_references
+        name: Confirm that there are NO undefined references on any network device
+      - type: assert_no_incompatible_bgp_sessions
+        name: Confirm that all BGP peers are properly configured
+      - type: assert_no_unestablished_bgp_sessions
+        name: Confirm that all compatible BGP peers establish sessions
+  run_once: true
+  delegate_to: localhost
+

@@ -1,0 +1,121 @@
+version: "3"
+services:
+
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab-lab
+    privileged: true
+    environment:
+      GITLAB_ROOT_PASSWORD: "NetOpsVista21!"
+      GITLAB_SHARED_RUNNERS_REGISTRATION_TOKEN: NetOpsToken1
+      GITLAB_OMNIBUS_CONFIG: |
+          external_url 'http://gitlab-lab:9080'
+          gitlab_rails['gitlab_shell_ssh_port'] = 8822
+    ports:
+      - "8888:9080"
+      - '8822:22'
+
+  gitlab-runner:
+    build: ./gitlab/networkci
+    image: networkci
+    container_name: runner-lab
+    environment:
+      REGISTRATION_TOKEN: "NetOpsToken1"
+      REGISTER_NON_INTERACTIVE: "true"
+      CI_SERVER_URL: "http://gitlab-lab:9080"
+      RUNNER_NAME: "NETOPS-RUNNER"
+      RUNNER_EXECUTOR: "shell"
+    networks:
+      - default
+      - host-1
+      - host-2
+
+  batfish:
+    image: batfish/allinone
+    container_name: batfish
+    ports:
+    - "9996:9996"
+    - "9997:9997"
+    - "9998:9998"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki:/etc/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./monitoring/promtail:/etc/promtail
+    command:  -config.file=/etc/promtail/promtail-config.yml
+    ports:
+      - "15140:1514"
+      - "9080:9080"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    user: root
+    environment:
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=NetOps
+    volumes:
+      - ./monitoring/grafana/data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning/
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yaml
+
+  arista-eapi-exporter:
+    build: ./monitoring/arista-eapi-exporter
+    image: arista-eapi-exporter
+    container_name: arista-eapi-exporter
+    ports:
+      - 9200:9200
+    volumes:
+      - ./monitoring/arista-eapi-exporter/config.yml:/arista_exporter/config.yml
+
+  syslog-ng:
+    image: balabit/syslog-ng
+    container_name: syslog-ng
+    volumes:
+      - ./monitoring/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+    ports:
+      - 51400:514
+    command: "--no-caps"
+
+  consul:
+    image: docker.io/bitnami/consul:1-debian-10
+    container_name: consul
+    ports:
+      - '8300:8300'
+      - '8301:8301'
+      - '8301:8301/udp'
+      - '8500:8500'
+      - '8600:8600'
+      - '8600:8600/udp'
+
+networks:
+  default:
+    external:
+      name: lab_net-0
+  host-1:
+    external:
+      name: lab_net-1
+  host-2:
+    external:
+      name: lab_net-2

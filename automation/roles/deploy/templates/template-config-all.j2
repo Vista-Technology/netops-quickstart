@@ -1,0 +1,105 @@
+!
+hostname {{ inventory_hostname }}
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+aaa authorization exec default local
+!
+username {{ management.username }} privilege 15 secret sha512 {{ management.password }}
+!
+ip access-list def2
+   9 permit tcp any any eq 8080
+   10 permit icmp any any
+   20 permit ip any any tracked
+   30 permit udp any any eq bfd ttl eq 255
+   40 permit udp any any eq bfd-echo ttl eq 254
+   50 permit udp any any eq multihop-bfd
+   60 permit udp any any eq micro-bfd
+   70 permit ospf any any
+   80 permit tcp any any eq ssh telnet www snmp bgp https msdp ldp netconf-ssh gnmi
+   90 permit udp any any eq bootps bootpc snmp rip ntp ldp
+   100 permit tcp any any eq mlag ttl eq 255
+   110 permit udp any any eq mlag ttl eq 255
+   120 permit vrrp any any
+   130 permit ahp any any
+   140 permit pim any any
+   150 permit igmp any any
+   160 permit tcp any any range 5900 5910
+   170 permit tcp any any range 50000 50100
+   180 permit udp any any range 51000 51100
+   190 permit tcp any any eq 3333
+   200 permit tcp any any eq nat ttl eq 255
+   210 permit tcp any eq bgp any
+   220 permit rsvp any any
+   exit
+!
+management api http-commands
+   no shutdown
+   exit
+{% for intf in interfaces %}
+!
+interface {{ intf.name }}
+   no switchport
+   ip address {{ intf.ipv4 }}
+   exit
+{% endfor %}
+!
+{% if vlan is defined %}
+vlan {{ vlan.id }}
+!
+interface Vlan{{ vlan.id }}
+   ip address {{ vlan.svi }}
+   exit
+!
+interface {{ vlan.interface }}
+   switchport
+   switchport mode access 
+   switchport access vlan {{ vlan.id }}
+   exit
+{% endif %}
+{% if bgp is defined %}
+!
+ip routing
+!
+route-map RMAP-CONNECTED-BGP permit 1000
+!
+interface Loopback0
+   description ROUTER-ID
+   ip address {{ routerid }}
+   exit
+!
+router bgp {{ bgp.asn }}
+{% set rid = routerid.split('/') %}
+   router-id {{ rid[0] }}
+{% for neighbor in bgp.neighbours %}
+{% set peer_ip = neighbor.ipv4 | ipaddr('address')  %}
+   neighbor {{ peer_ip }} remote-as {{ neighbor.remote_asn }}
+   neighbor {{ peer_ip }} send-community
+   neighbor {{ peer_ip }} maximum-routes 12000
+{% endfor %}
+   redistribute connected route-map RMAP-CONNECTED-BGP
+   maximum-paths 2
+   exit
+!
+{% endif %}
+!
+system control-plane
+   ip access-group def2 in
+   exit
+!
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -disableaaa
+   no shutdown
+   exit
+!
+daemon ocprometheus
+   exec /mnt/flash/ocprometheus -config /mnt/flash/ocprometheus.yml -addr localhost:6042
+   no shutdown
+   exit
+!
+logging host {{ logging_remote_host }} {{ logging_remote_port }} protocol tcp
+logging format hostname fqdn
+!
+end

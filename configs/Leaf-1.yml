@@ -1,0 +1,13 @@
+interfaces:
+  - name: Ethernet1
+    ipv4: 10.0.254.1/31
+routerid: 1.1.1.1/32
+bgp:
+  asn: 65001
+  neighbours: 
+    - ipv4: 10.0.254.0
+      remote_asn: 65100
+vlan:
+  id: 10
+  svi: 192.168.10.1/24
+  interface: Ethernet10

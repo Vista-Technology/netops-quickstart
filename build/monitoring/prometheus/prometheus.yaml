@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 10s
+  scrape_timeout: 5s
+
+rule_files:
+  - alert.yaml
+
+scrape_configs:
+  - job_name: arista
+    scrape_interval: 15s
+    honor_labels: true
+    consul_sd_configs:
+    - server: consul:8500
+      services: ["Arista monitoring"]
+    relabel_configs:
+    - source_labels: [__meta_consul_tags]
+      regex: .*,_device=([^,]+),.*
+      replacement: ${1}
+      target_label: _device
+    - source_labels: [__meta_consul_tags]
+      regex: .*,_type=([^,]+),.*
+      replacement: ${1}
+      target_label: _type
+
+  - job_name: arista-exporter
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['lab_Leaf-1:443']
+        labels:
+          device: 'Leaf-1'
+      - targets: ['lab_Leaf-2:443']
+        labels:
+          device: 'Leaf-2'
+      - targets: ['lab_Spine-1:443']
+        labels:
+          device: 'Spine-1'
+    metrics_path: /arista
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: arista-eapi-exporter:9200

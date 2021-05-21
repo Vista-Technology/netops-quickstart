@@ -1,0 +1,10 @@
+---
+- name: Register Consul service
+  community.general.consul:
+    service_name: "Arista Monitoring"
+    service_port: 8080
+    service_id: "{{ inventory_hostname }}"
+    service_address: "{{ inventory_hostname }}"
+    host: "{{ consul_host }}"
+    tags: 
+      - "_device={{ inventory_hostname }}"

@@ -1,0 +1,8 @@
+listen_port: 9200
+username: 'arista'
+password: 'arista'
+protocol: 'https'
+loglevel: INFO
+timeout: 20
+exclude: ['NextHop', 'LPM', 'Host', 'MAC', 'VFP']
+job: 'arista'

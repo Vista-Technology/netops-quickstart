@@ -1,0 +1,9 @@
+---
+- name: Validate configurations
+  hosts: lab
+  connection: local
+  gather_facts: false
+
+  roles:
+    - batfish.base
+    - validate

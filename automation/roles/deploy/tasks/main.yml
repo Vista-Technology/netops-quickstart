@@ -1,0 +1,6 @@
+---
+- name: Configure device
+  arista.eos.eos_config:
+    src: template-config-all.j2
+    replace: config
+    match: none

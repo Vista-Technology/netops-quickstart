@@ -1,0 +1,7 @@
+---
+collections:
+- lvrfrc87.git_acp
+- arista.eos
+
+roles:
+- batfish.base

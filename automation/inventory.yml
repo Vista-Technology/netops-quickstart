@@ -1,0 +1,36 @@
+lab:
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: eos
+    ansible_user: arista
+    ansible_httpapi_pass: arista
+    ansible_ssh_pass: arista
+    ansible_password: arista
+    ansible_become: true
+    ansible_become_method: enable
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    logging_remote_host: <insert your server IP here>
+    logging_remote_port: 51400
+    consul_host: consul
+  children:
+    Spines:
+      hosts:
+        Spine-1
+    Leafs:
+      hosts:
+        Leaf-1
+        Leaf-2
+testing:
+  vars:
+    ansible_become: true
+    ansible_user: alpine
+    ansible_ssh_private_key_file: demo.key
+  children:
+    alpine:
+      hosts:
+        Host-1:
+          ip_to_ping: 192.168.20.20
+        Host-2:
+          ip_to_ping: 192.168.10.10
+
