@@ -7,7 +7,7 @@ We've tried to put everything together in an all-in-one stack deployment, from c
 It is important to say that this is not THE Solution (with capitol S), but a possible approach that can be helpful to understand the power of NetOps and give some initial spark to those who want to investigate this subject for the first time.
 
 We focus on the main goals of NetOps methodology, in a closed-loop telemetry/automation model:
-* **Infrascruture as Cdde** (aka IaC)
+* **Infrascruture as Code** (aka IaC)
 * **Versioning**
 * **Automation**
 * **Monitoring**
