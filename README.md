@@ -2,6 +2,8 @@
 
 This is a DEMO project (thus, do not use in production environment) with the purpose of giving on overview on some example tools, methods and procedures focused on NetOps best practice.
 
+This work is based on and is inspired by the beautiful work of [networkop]https://github.com/networkop, in his repo [https://github.com/networkop/arista-network-ci]https://github.com/networkop/arista-network-ci
+
 We've tried to put everything together in an all-in-one stack deployment, from code to network devices, passing passing through automation playbooks, validation and testing.
 
 It is important to say that this is not THE Solution (with capitol S), but a possible approach that can be helpful to understand the power of NetOps and give some initial spark to those who want to investigate this subject for the first time.
