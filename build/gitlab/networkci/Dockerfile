@@ -1,4 +1,4 @@
-FROM gitlab/gitlab-runner:latest
+FROM gitlab/gitlab-runner:ubuntu-v13.12.0
 
 RUN apt update && apt install -y python3 python3-pip
 

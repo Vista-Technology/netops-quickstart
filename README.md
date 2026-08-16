@@ -1,5 +1,171 @@
 # NetOps Quickstart
 
+## 2026 Compatibility Update
+
+This fork updates the original 2021-era **NetOps Quickstart** lab so it can run reliably in 2026 on an Ubuntu Server 20.04 VM. Ubuntu 20.04 was used intentionally because its Python 3.8 environment is a better match for the lab's older Ansible and Python dependencies than newer Ubuntu releases.
+
+Ubuntu 22.04/24.04 may work with additional changes, but this fork was validated on Ubuntu Server 20.04 because the original lab depends on an older Python and Ansible ecosystem.
+
+The original lab design is still useful: it demonstrates a complete NetDevOps workflow using Arista cEOS, GitLab CI, Ansible, Batfish, Prometheus, Grafana, Loki, and Docker. However, several upstream images, Python packages, Ansible collections, and Linux defaults have changed since the original project was created.
+
+This fork preserves the original lab concept while pinning and patching the pieces that drifted.
+
+> This is still a demo/lab environment. Do not use these settings in production.
+
+### Tested environment
+
+This fork was tested with:
+
+- Ubuntu Server 20.04 VM running in VMware Workstation
+- Docker Engine with legacy `docker-compose`
+- Arista cEOS lab image
+- GitLab CE / GitLab Runner 13.12-era stack
+- Ansible 2.10-era automation environment
+
+### Summary of fixes
+
+| Area | Original behavior | Fix |
+|---|---|---|
+| GitLab CE | Used `gitlab/gitlab-ce:latest` | Pinned to `gitlab/gitlab-ce:13.12.15-ce.0` |
+| GitLab Runner | Used `gitlab/gitlab-runner:latest` | Pinned to `gitlab/gitlab-runner:ubuntu-v13.12.0` |
+| Consul | Used removed image `docker.io/bitnami/consul:1-debian-10` | Replaced with `hashicorp/consul:1.9.5` |
+| Batfish | Used unpinned `batfish/allinone` | Pinned to `batfish/allinone:2021.04.12.882` to match the older `pybatfish` client |
+| Grafana | Used `grafana/grafana:latest` | Pinned to `grafana/grafana:7.5.7` |
+| Loki | Used `grafana/loki:latest` | Pinned to `grafana/loki:2.2.1` |
+| Promtail | Used `grafana/promtail:latest` | Pinned to `grafana/promtail:2.2.1` |
+| Arista eAPI exporter | Used `python:3-slim` and unpinned Python packages | Changed to `python:3.8-slim` and pinned compatible dependencies |
+| PyYAML / yamlconfig | Newer PyYAML broke old `yamlconfig` usage | Pinned `PyYAML==5.4.1` |
+| Ansible Galaxy collections | Pulled modern collections incompatible with Ansible 2.10 | Pinned compatible collection versions |
+| Jinja `ipaddr` filter | Template expected an unavailable `ipaddr` filter | Replaced with `neighbor.ipv4.split('/')[0]` |
+| Inventory YAML | Host entries were interpreted incorrectly without colons | Fixed host definitions such as `Leaf-1:` and `Leaf-2:` |
+| Alpine host SSH | Modern Alpine/OpenSSH rejected the locked `alpine` account | Unlocked the disposable lab user during image build |
+| Host ping test | Used Ansible `shell`, requiring compatible Python on Alpine hosts | Replaced with `raw` so the ping command runs directly over SSH |
+
+### Updated Docker image pins
+
+The following images are now pinned instead of relying on moving `latest` tags:
+
+```yaml
+gitlab/gitlab-ce:13.12.15-ce.0
+gitlab/gitlab-runner:ubuntu-v13.12.0
+batfish/allinone:2021.04.12.882
+hashicorp/consul:1.9.5
+grafana/grafana:7.5.7
+grafana/loki:2.2.1
+grafana/promtail:2.2.1
+```
+
+### Updated Ansible Galaxy requirements
+
+The original lab allowed Ansible Galaxy to pull current collections into an Ansible 2.10 runtime. That caused compatibility failures.
+
+The fixed `automation/requirements.yml` pins versions known to work with this lab:
+
+```yaml
+---
+collections:
+  - name: lvrfrc87.git_acp
+    version: 2.2.0
+  - name: arista.eos
+    version: 1.3.0
+  - name: ansible.netcommon
+    version: 1.5.0
+
+roles:
+  - name: batfish.base
+```
+
+### Jinja template compatibility fix
+
+The original templates used:
+
+```jinja2
+{% set peer_ip = neighbor.ipv4 | ipaddr('address') %}
+```
+
+In the fixed version, this was replaced with:
+
+```jinja2
+{% set peer_ip = neighbor.ipv4.split('/')[0] %}
+```
+
+For this lab, the neighbor IP values are simple CIDR strings, so splitting on `/` is sufficient and avoids depending on the unavailable `ipaddr` filter.
+
+### Alpine host SSH fix
+
+Modern Alpine/OpenSSH refused SSH login for the `alpine` user because the account was locked:
+
+```text
+User alpine not allowed because account is locked
+```
+
+The Alpine host Dockerfile now unlocks the disposable lab user:
+
+```dockerfile
+RUN adduser -u 1000 -G wheel -s /bin/sh -D alpine && \
+    echo "alpine:alpine" | chpasswd && \
+    echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+```
+
+This is acceptable for a local disposable lab only. Do not reuse this pattern in production.
+
+### Ping test fix
+
+The original ping playbook used Ansible's `shell` module:
+
+```yaml
+shell: "ping -c 1 -w 2 {{ ip_to_ping }}"
+```
+
+On the Alpine host containers, this failed because Ansible attempted to execute Python-based module code on the remote host.
+
+The fixed playbook uses `raw`:
+
+```yaml
+raw: "ping -c 1 -w 2 {{ ip_to_ping }}"
+```
+
+`raw` runs the command directly over SSH and does not require Python on the remote host.
+
+### Files intentionally not committed
+
+The following files are runtime artifacts or licensed/vendor images and should not be committed to this repository:
+
+```text
+build/topology/cEOS-Lab.tar.xz
+automation/host_vars/*.yml
+automation/collections/
+automation/roles/batfish.base/
+automation/demo.key
+automation/demo.key.pub
+build/topology/alpine-host/demo.key
+build/topology/alpine-host/demo.key.pub
+build/monitoring/grafana/data/*
+```
+
+Users must provide their own Arista cEOS image at:
+
+```text
+build/topology/cEOS-Lab.tar.xz
+```
+
+### Note about `logging_remote_host`
+
+Before running the GitLab pipeline, update:
+
+```yaml
+logging_remote_host: <insert your server IP here>
+```
+
+in:
+
+```text
+automation/inventory.yml
+```
+
+Set it to the reachable IP address of your lab VM.
+
+
 This is a DEMO project (thus, do not use in production environment) with the purpose of giving on overview on some example tools, methods and procedures focused on NetOps best practice.
 
 This work is based on and is inspired by the beautiful work of [networkop](https://github.com/networkop), in his repo [https://github.com/networkop/arista-network-ci](https://github.com/networkop/arista-network-ci)

@@ -1,6 +1,7 @@
-requests
-prometheus-client
-falcon
-yamlconfig
+requests==2.25.1
+prometheus-client==0.9.0
+falcon==2.0.0
+yamlconfig==0.3.1
+PyYAML==5.4.1
 argparse
-pyeapi
+pyeapi==0.8.4

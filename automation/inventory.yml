@@ -10,17 +10,17 @@ lab:
     ansible_become_method: enable
     ansible_httpapi_use_ssl: true
     ansible_httpapi_validate_certs: false
-    logging_remote_host: <insert your server IP here>
+    logging_remote_host: <insert your server IP here> #INSERT YOUR IP HERE!
     logging_remote_port: 51400
     consul_host: consul
   children:
     Spines:
       hosts:
-        Spine-1
+        Spine-1:
     Leafs:
       hosts:
-        Leaf-1
-        Leaf-2
+        Leaf-1:
+        Leaf-2:
 testing:
   vars:
     ansible_become: true

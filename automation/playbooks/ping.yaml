@@ -5,7 +5,7 @@
 
   tasks:
     - name: Ping destination
-      shell: "ping -c 1 -w 2 {{ ip_to_ping }} "
+      raw: "ping -c 1 -w 2 {{ ip_to_ping }} "
       register: output
 
     - name: Print result

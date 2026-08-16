@@ -12,6 +12,7 @@ RUN apk update && \
 
 
 RUN adduser -u 1000 -G wheel -s /bin/sh -D alpine && \
+    echo "alpine:alpine" | chpasswd && \
     echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 COPY sshd_config /etc/ssh/sshd_config
