@@ -74,7 +74,7 @@ router bgp {{ bgp.asn }}
 {% set rid = routerid.split('/') %}
    router-id {{ rid[0] }}
 {% for neighbor in bgp.neighbours %}
-{% set peer_ip = neighbor.ipv4 | ipaddr('address')  %}
+{% set peer_ip = neighbor.ipv4.split('/')[0] %}
    neighbor {{ peer_ip }} remote-as {{ neighbor.remote_asn }}
    neighbor {{ peer_ip }} send-community
    neighbor {{ peer_ip }} maximum-routes 12000

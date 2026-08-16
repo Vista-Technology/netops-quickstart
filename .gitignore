@@ -1,2 +1,24 @@
 .venv
-build/toopology/cEOS-Lab.tar.xz
+build/topology/cEOS-Lab.tar.xz
+
+# Runtime/generated Ansible files
+automation/host_vars/*.yml
+automation/collections/
+automation/roles/batfish.base/
+automation/validation/workshop/configs/*
+automation/validation/workshop/data/bf_facts/*
+
+# Lab-generated SSH keys
+automation/demo.key
+automation/demo.key.pub
+build/topology/alpine-host/demo.key
+build/topology/alpine-host/demo.key.pub
+
+# Python/runtime
+.venv/
+__pycache__/
+*.pyc
+
+# Grafana runtime DB/data
+build/monitoring/grafana/data/*
+!build/monitoring/grafana/data/.gitignore

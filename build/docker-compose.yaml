@@ -2,7 +2,7 @@ version: "3"
 services:
 
   gitlab:
-    image: gitlab/gitlab-ce:latest
+    image: gitlab/gitlab-ce:13.12.15-ce.0
     container_name: gitlab-lab
     privileged: true
     environment:
@@ -31,7 +31,7 @@ services:
       - host-2
 
   batfish:
-    image: batfish/allinone
+    image: batfish/allinone:2021.04.12.882
     container_name: batfish
     ports:
     - "9996:9996"
@@ -39,7 +39,7 @@ services:
     - "9998:9998"
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.2.1
     container_name: loki
     ports:
       - "3100:3100"
@@ -48,7 +48,7 @@ services:
     command: -config.file=/etc/loki/loki-config.yaml
 
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:2.2.1
     container_name: promtail
     volumes:
       - ./monitoring/promtail:/etc/promtail
@@ -58,7 +58,7 @@ services:
       - "9080:9080"
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:7.5.7
     container_name: grafana
     user: root
     environment:
@@ -99,7 +99,7 @@ services:
     command: "--no-caps"
 
   consul:
-    image: docker.io/bitnami/consul:1-debian-10
+    image: hashicorp/consul:1.9.5
     container_name: consul
     ports:
       - '8300:8300'
